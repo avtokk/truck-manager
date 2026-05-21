@@ -5,7 +5,7 @@ import './UpdatePage.css';
 
 const LOCAL_KEY = 'truckmanager_update_v2';
 
-export default function UpdatePage({ notifyChange, addNotification }) {
+export default function UpdatePage({ notifyChange, addNotification, t }) {
   const [text, setText] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '""'); } catch { return ''; }
   });
@@ -17,9 +17,7 @@ export default function UpdatePage({ notifyChange, addNotification }) {
     let unsub;
     try {
       unsub = onSnapshot(doc(db, 'data', 'update'), (snap) => {
-        if (snap.exists() && snap.data().text !== undefined) {
-          setText(snap.data().text);
-        }
+        if (snap.exists() && snap.data().text !== undefined) setText(snap.data().text);
       }, () => {});
     } catch {}
     return () => unsub && unsub();
@@ -30,93 +28,69 @@ export default function UpdatePage({ notifyChange, addNotification }) {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSyncing(true);
-      try {
-        await setDoc(doc(db, 'data', 'update'), { text: val });
-        await notifyChange('📝 UPDATE გვერდი განახლდა');
-        setLastSaved(new Date());
-      } catch {}
+      try { await setDoc(doc(db, 'data', 'update'), { text: val }); await notifyChange('UPDATE page updated'); setLastSaved(new Date()); } catch {}
       setSyncing(false);
     }, 1200);
   }, [notifyChange]);
 
-  const handleChange = (val) => {
-    setText(val);
-    persist(val);
-  };
+  const handleChange = (val) => { setText(val); persist(val); };
 
   const clearText = () => {
-    if (!window.confirm('UPDATE ველი გასუფთავდეს?')) return;
-    handleChange('');
-    addNotification('🗑 UPDATE გასუფთავდა');
+    if (!window.confirm(t.updateClearConfirm)) return;
+    handleChange(''); addNotification(t.updateClear);
   };
 
   const copyText = () => {
-    navigator.clipboard.writeText(text).then(() => addNotification('📋 კოპირებულია'));
+    navigator.clipboard.writeText(text).then(() => addNotification(t.copied));
   };
 
-  // Parse lines for highlighting
   const lines = text.split('\n');
 
   return (
     <div className="update-page">
       <div className="update-header no-print">
-        <h1 className="page-title">📝 UPDATE</h1>
+        <h1 className="page-title">{t.update}</h1>
         <div className="update-meta">
-          {syncing && <span className="sync-ind">↑ SYNC</span>}
-          {lastSaved && !syncing && (
-            <span className="saved-ind">
-              ✓ {lastSaved.toLocaleTimeString('ka-GE')}
-            </span>
-          )}
+          {syncing && <span className="sync-ind">&#8593; SYNC</span>}
+          {lastSaved && !syncing && <span className="saved-ind">&#10003; {lastSaved.toLocaleTimeString()}</span>}
         </div>
         <div className="update-actions">
-          <button className="action-btn copy" onClick={copyText}>📋 კოპირება</button>
-          <button className="action-btn clear" onClick={clearText}>🗑 გასუფთავება</button>
+          <button className="action-btn copy" onClick={copyText}>&#128203; {t.copy}</button>
+          <button className="action-btn clear" onClick={clearText}>&#128465; {t.clear}</button>
         </div>
       </div>
-
       <div className="update-body">
-        {/* Editor */}
         <div className="editor-wrap">
-          <div className="editor-label">სატვირთოების გეგმები</div>
+          <div className="editor-label">{t.plans}</div>
           <div className="editor-container">
-            {/* Line numbers */}
             <div className="line-numbers">
-              {lines.map((_, i) => (
-                <span key={i}>{i + 1}</span>
-              ))}
+              {lines.map((_, i) => <span key={i}>{i+1}</span>)}
             </div>
             <textarea
               className="update-textarea"
               value={text}
               onChange={e => handleChange(e.target.value)}
-              placeholder={`evans - going to bremerhaven\nkryvoruchenko - going to niepolomice\ndima - going to base\n\n...`}
+              placeholder={'evans - going to bremerhaven\nkryvoruchenko - going to niepolomice\ndima - going to base'}
               spellCheck={false}
             />
           </div>
         </div>
-
-        {/* Preview */}
         {text.trim() && (
           <div className="preview-wrap">
-            <div className="editor-label">Preview</div>
+            <div className="editor-label">{t.preview || 'Preview'}</div>
             <div className="preview-box">
               {lines.filter(l => l.trim()).map((line, i) => {
                 const dashIdx = line.indexOf(' - ');
                 if (dashIdx > -1) {
-                  const driver = line.slice(0, dashIdx);
-                  const plan = line.slice(dashIdx + 3);
                   return (
                     <div key={i} className="preview-line">
-                      <span className="prev-driver">{driver}</span>
-                      <span className="prev-sep"> → </span>
-                      <span className="prev-plan">{plan}</span>
+                      <span className="prev-driver">{line.slice(0, dashIdx)}</span>
+                      <span className="prev-sep"> &#8594; </span>
+                      <span className="prev-plan">{line.slice(dashIdx+3)}</span>
                     </div>
                   );
                 }
-                return (
-                  <div key={i} className="preview-line preview-plain">{line}</div>
-                );
+                return <div key={i} className="preview-line preview-plain">{line}</div>;
               })}
             </div>
           </div>
