@@ -98,6 +98,20 @@ export default function App() {
         {page === 'home' && <HomePage notifyChange={notifyChange} addNotification={addNotification} />}
         {page === 'permits' && <PermitsPage notifyChange={notifyChange} addNotification={addNotification} />}
         {page === 'update' && <UpdatePage notifyChange={notifyChange} addNotification={addNotification} />}
+        {page === 'files' && (
+          <div style={{padding: '20px'}}>
+            <h1 style={{color: 'var(--accent)', fontFamily: 'var(--sans)', letterSpacing: '3px', marginBottom: '24px'}}>📁 FILES</h1>
+            
+              href="https://fructustransportcom.sharepoint.com/:x:/s/FRUCTUS/IQBr8-5TMn4pQK62TFL03UcbAfX4GLcijJ2hSmM1780qWHQ?e=Z6ZUXW"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{display:'inline-flex',alignItems:'center',gap:'10px',background:'rgba(0,120,212,0.15)',color:'#4fc3f7',border:'1px solid #0078d4',borderRadius:'6px',padding:'14px 24px',fontFamily:'var(--sans)',fontWeight:'700',fontSize:'16px',textDecoration:'none'}}
+            >
+              📊 Ładunki.xlsx — გახსნა
+            </a>
+          </div>
+        )}
+      </main>
       </main>
     </div>
   );
