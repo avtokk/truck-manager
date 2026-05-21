@@ -56,6 +56,7 @@ export default function App() {
     { id: 'home', label: '🚛 DASHBOARD', short: 'DASH' },
     { id: 'permits', label: '📄 PERMITS', short: 'PRMT' },
     { id: 'update', label: '📝 UPDATE', short: 'UPDT' },
+    { id: 'files', label: '📁 FILES', short: 'FILE' },
   ];
 
   return (
