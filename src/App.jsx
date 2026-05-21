@@ -1,0 +1,103 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { db } from './firebase';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import HomePage from './pages/HomePage';
+import PermitsPage from './pages/PermitsPage';
+import UpdatePage from './pages/UpdatePage';
+import './App.css';
+
+export default function App() {
+  const [page, setPage] = useState('home');
+  const [notifications, setNotifications] = useState([]);
+  const [lastChangeId, setLastChangeId] = useState(null);
+  const [firebaseOk, setFirebaseOk] = useState(true);
+
+  const addNotification = useCallback((msg) => {
+    const id = Date.now();
+    setNotifications(n => [...n, { id, msg }]);
+    setTimeout(() => setNotifications(n => n.filter(x => x.id !== id)), 4000);
+  }, []);
+
+  // Listen for real-time changes from Firebase
+  useEffect(() => {
+    let unsub;
+    try {
+      unsub = onSnapshot(doc(db, 'meta', 'lastChange'), (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (lastChangeId && data.id !== lastChangeId) {
+          addNotification(`✦ ${data.message || 'მონაცემები განახლდა'}`);
+        }
+        setLastChangeId(data.id);
+      }, (err) => {
+        console.warn('Firebase not configured:', err);
+        setFirebaseOk(false);
+      });
+    } catch (e) {
+      setFirebaseOk(false);
+    }
+    return () => unsub && unsub();
+  }, [lastChangeId, addNotification]);
+
+  const notifyChange = async (message) => {
+    const id = Date.now().toString();
+    try {
+      await setDoc(doc(db, 'meta', 'lastChange'), {
+        id,
+        message,
+        ts: serverTimestamp()
+      });
+    } catch (e) {
+      // Firebase not set up yet, skip
+    }
+  };
+
+  const navItems = [
+    { id: 'home', label: '🚛 DASHBOARD', short: 'DASH' },
+    { id: 'permits', label: '📄 PERMITS', short: 'PRMT' },
+    { id: 'update', label: '📝 UPDATE', short: 'UPDT' },
+  ];
+
+  return (
+    <div className="app-root">
+      {/* Notifications */}
+      <div className="notif-stack">
+        {notifications.map(n => (
+          <div key={n.id} className="notification">{n.msg}</div>
+        ))}
+      </div>
+
+      {/* Nav */}
+      <nav className="nav no-print">
+        <div className="nav-brand">
+          <span className="brand-icon">⬡</span>
+          <span className="brand-text">TRUCK<span className="accent">MGR</span></span>
+        </div>
+        <div className="nav-links">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              className={`nav-btn ${page === item.id ? 'active' : ''}`}
+              onClick={() => setPage(item.id)}
+            >
+              <span className="nav-full">{item.label}</span>
+              <span className="nav-short">{item.short}</span>
+            </button>
+          ))}
+        </div>
+        {!firebaseOk && (
+          <div className="firebase-warn" title="Firebase-ის კავშირი არ არის. ლოკალური რეჟიმი.">
+            ⚠ LOCAL
+          </div>
+        )}
+      </nav>
+
+      {/* Pages */}
+      <main className="main-content">
+        {page === 'home' && <HomePage notifyChange={notifyChange} addNotification={addNotification} />}
+        {page === 'permits' && <PermitsPage notifyChange={notifyChange} addNotification={addNotification} />}
+        {page === 'update' && <UpdatePage notifyChange={notifyChange} addNotification={addNotification} />}
+      </main>
+    </div>
+  );
+}
