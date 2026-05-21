@@ -107,7 +107,7 @@ export default function App() {
               rel="noopener noreferrer"
               style={{display:'inline-flex',alignItems:'center',gap:'10px',background:'rgba(0,120,212,0.15)',color:'#4fc3f7',border:'1px solid #0078d4',borderRadius:'6px',padding:'14px 24px',fontFamily:'var(--sans)',fontWeight:'700',fontSize:'16px',textDecoration:'none'}}
             >
-              📊 Ładunki.xlsx — გახსნა
+              📊 Ładunki.xlsx - გახსნა
             </a>
           </div>
         )}
