@@ -263,9 +263,17 @@
 
 /* Mobile */
 @media (max-width: 600px) {
-  .home-header { gap: 6px; }
-  .clock { font-size: 12px; padding: 4px 8px; }
-  .action-btn { font-size: 11px; padding: 5px 10px; }
-  .truck-table { min-width: 600px; }
-  .sticky-note { font-size: 13px; }
+  .home-header { gap: 4px; }
+  .clock { font-size: 11px; padding: 3px 6px; }
+  .action-btn { font-size: 10px; padding: 4px 7px; }
+  .truck-table { min-width: unset; width: 100%; }
+  .col-num { width: 28px; }
+  .col-truck { width: 90px; }
+  .col-info { min-width: 80px; }
+  .col-check { width: 48px; }
+  .truck-table thead th { font-size: 9px; padding: 6px 3px; letter-spacing: 0; }
+  .cell-input { padding: 6px 4px; font-size: 11px; }
+  .check-cell input[type="checkbox"] { width: 18px; height: 18px; }
+  .sticky-note { font-size: 12px; }
+}
 }
