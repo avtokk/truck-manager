@@ -30,10 +30,19 @@ function Clock() {
   const pad = n => String(n).padStart(2, '0');
   return (
     <span className="clock">
-      {pad(now.getDate())}.{pad(now.getMonth()+1)}.{now.getFullYear()} &nbsp;
-      {pad(now.getHours())}:{pad(now.getMinutes())}:{pad(now.getSeconds())}
+      {pad(now.getDate())}.{pad(now.getMonth()+1)}.{now.getFullYear()} {pad(now.getHours())}:{pad(now.getMinutes())}:{pad(now.getSeconds())}
     </span>
   );
+}
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(window.innerWidth <= 700);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth <= 700);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return mobile;
 }
 
 export default function HomePage({ notifyChange, addNotification, t }) {
@@ -43,6 +52,7 @@ export default function HomePage({ notifyChange, addNotification, t }) {
   const [note, setNote] = useState(() => loadLocal()?.note || '');
   const [syncing, setSyncing] = useState(false);
   const debounceRef = useRef(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     let unsub;
@@ -100,58 +110,110 @@ export default function HomePage({ notifyChange, addNotification, t }) {
     <div className="home-page">
       <div className="home-header no-print">
         <div className="header-left">
-          <button className="ctrl-btn add" onClick={addTruck} title={t.addTruck}>+</button>
-          <button className="ctrl-btn rem" onClick={removeTruck} title={t.removeTruck}>&#8722;</button>
+          <button className="ctrl-btn add" onClick={addTruck}>+</button>
+          <button className="ctrl-btn rem" onClick={removeTruck}>&#8722;</button>
           <span className="truck-count">{t.truckCount(trucks.length)}</span>
-          {syncing && <span className="sync-ind">&#8593; SYNC</span>}
+          {syncing && <span className="sync-ind">&#8593;</span>}
         </div>
         <Clock />
         <div className="header-right">
-          <button className="action-btn clear" onClick={clearAll}>&#128465; {t.clear}</button>
-          <button className="action-btn excel" onClick={exportExcel}>&#128202; {t.excel}</button>
-          <button className="action-btn print" onClick={() => window.print()}>&#128424; {t.print}</button>
+          <button className="action-btn clear" onClick={clearAll}>&#128465;</button>
+          <button className="action-btn excel" onClick={exportExcel}>XLS</button>
+          <button className="action-btn print" onClick={() => window.print()}>&#128424;</button>
         </div>
       </div>
-      <div className="print-only print-header"><h2>TRUCK MANAGER</h2></div>
-      <div className="table-wrap">
-        <table className="truck-table">
-          <thead>
-            <tr>
-              <th className="col-num">#</th>
-              <th className="col-truck">{t.truck}</th>
-              <th className="col-info">{t.info}</th>
-              <th className="col-check">{t.fuel}</th>
-              <th className="col-check">{t.road}</th>
-              <th className="col-check">{t.dayTask}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trucks.map((truck, idx) => (
-              <tr key={truck.id} className={'truck-row' + (truck.done ? ' row-done' : '')}>
-                <td className="col-num td-num">{idx+1}</td>
-                <td className="col-truck">
-                  <input className="cell-input truck-input" value={truck.number} onChange={e => updateTruck(idx,'number',e.target.value)} placeholder={t.truckPlaceholder} />
-                </td>
-                <td className="col-info">
-                  <input className="cell-input info-input" value={truck.info} onChange={e => updateTruck(idx,'info',e.target.value)} placeholder={t.infoPlaceholder} />
-                </td>
-                <td className={'col-check td-check ' + (truck.fuel ? 'cell-green' : 'cell-red')}>
-                  <div className="check-cell"><input type="checkbox" checked={truck.fuel} onChange={e => updateTruck(idx,'fuel',e.target.checked)} /></div>
-                </td>
-                <td className={'col-check td-check ' + (truck.road ? 'cell-green' : 'cell-red')}>
-                  <div className="check-cell"><input type="checkbox" checked={truck.road} onChange={e => updateTruck(idx,'road',e.target.checked)} /></div>
-                </td>
-                <td className={'col-check td-check ' + (truck.done ? 'cell-done' : '')}>
-                  <div className="check-cell"><input type="checkbox" checked={truck.done} onChange={e => updateTruck(idx,'done',e.target.checked)} /></div>
-                </td>
+
+      {/* DESKTOP TABLE */}
+      {!isMobile && (
+        <div className="table-wrap">
+          <table className="truck-table">
+            <thead>
+              <tr>
+                <th className="col-num">#</th>
+                <th className="col-truck">{t.truck}</th>
+                <th className="col-info">{t.info}</th>
+                <th className="col-check">&#9981; {t.fuel}</th>
+                <th className="col-check">&#128739; {t.road}</th>
+                <th className="col-check">&#10003; {t.dayTask}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {trucks.map((truck, idx) => (
+                <tr key={truck.id} className={'truck-row' + (truck.done ? ' row-done' : '')}>
+                  <td className="col-num td-num">{idx+1}</td>
+                  <td className="col-truck">
+                    <input className="cell-input truck-input" value={truck.number} onChange={e => updateTruck(idx,'number',e.target.value)} placeholder={t.truckPlaceholder} />
+                  </td>
+                  <td className="col-info">
+                    <input className="cell-input info-input" value={truck.info} onChange={e => updateTruck(idx,'info',e.target.value)} placeholder={t.infoPlaceholder} />
+                  </td>
+                  <td className={'col-check td-check ' + (truck.fuel ? 'cell-green' : 'cell-red')}>
+                    <div className="check-cell"><input type="checkbox" checked={truck.fuel} onChange={e => updateTruck(idx,'fuel',e.target.checked)} /></div>
+                  </td>
+                  <td className={'col-check td-check ' + (truck.road ? 'cell-green' : 'cell-red')}>
+                    <div className="check-cell"><input type="checkbox" checked={truck.road} onChange={e => updateTruck(idx,'road',e.target.checked)} /></div>
+                  </td>
+                  <td className={'col-check td-check ' + (truck.done ? 'cell-done' : '')}>
+                    <div className="check-cell"><input type="checkbox" checked={truck.done} onChange={e => updateTruck(idx,'done',e.target.checked)} /></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* MOBILE CARDS */}
+      {isMobile && (
+        <div className="mobile-cards">
+          {trucks.map((truck, idx) => (
+            <div key={truck.id} className={'mobile-card' + (truck.done ? ' card-done' : '')}>
+              <div className="card-top">
+                <span className="card-num">{idx+1}</span>
+                <input
+                  className="card-truck-input"
+                  value={truck.number}
+                  onChange={e => updateTruck(idx,'number',e.target.value)}
+                  placeholder={t.truckPlaceholder}
+                />
+                <div className={'card-done-check' + (truck.done ? ' done-on' : '')}>
+                  <label>
+                    <input type="checkbox" checked={truck.done} onChange={e => updateTruck(idx,'done',e.target.checked)} />
+                    <span>{t.dayTask}</span>
+                  </label>
+                </div>
+              </div>
+              <textarea
+                className="card-info-input"
+                value={truck.info}
+                onChange={e => updateTruck(idx,'info',e.target.value)}
+                placeholder={t.infoPlaceholder}
+                rows={2}
+              />
+              <div className="card-checks">
+                <label className={'card-check-label ' + (truck.fuel ? 'chk-green' : 'chk-red')}>
+                  <input type="checkbox" checked={truck.fuel} onChange={e => updateTruck(idx,'fuel',e.target.checked)} />
+                  <span>{t.fuel}</span>
+                </label>
+                <label className={'card-check-label ' + (truck.road ? 'chk-green' : 'chk-red')}>
+                  <input type="checkbox" checked={truck.road} onChange={e => updateTruck(idx,'road',e.target.checked)} />
+                  <span>{t.road}</span>
+                </label>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="sticky-section">
         <div className="sticky-label">&#128204; {t.dayNote}</div>
-        <textarea className="sticky-note" value={note} onChange={e => updateNote(e.target.value)} placeholder={t.notePlaceholder} rows={5} />
+        <textarea
+          className="sticky-note"
+          value={note}
+          onChange={e => updateNote(e.target.value)}
+          placeholder={t.notePlaceholder}
+          rows={4}
+        />
       </div>
     </div>
   );
