@@ -28,7 +28,11 @@ export default function UpdatePage({ notifyChange, addNotification, t }) {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSyncing(true);
-      try { await setDoc(doc(db, 'data', 'update'), { text: val }); await notifyChange('UPDATE page updated'); setLastSaved(new Date()); } catch {}
+      try {
+        await setDoc(doc(db, 'data', 'update'), { text: val });
+        await notifyChange('UPDATE page updated');
+        setLastSaved(new Date());
+      } catch {}
       setSyncing(false);
     }, 1200);
   }, [notifyChange]);
@@ -59,42 +63,20 @@ export default function UpdatePage({ notifyChange, addNotification, t }) {
           <button className="action-btn clear" onClick={clearText}>&#128465; {t.clear}</button>
         </div>
       </div>
-      <div className="update-body">
-        <div className="editor-wrap">
-          <div className="editor-label">{t.plans}</div>
-          <div className="editor-container">
-            <div className="line-numbers">
-              {lines.map((_, i) => <span key={i}>{i+1}</span>)}
-            </div>
-            <textarea
-              className="update-textarea"
-              value={text}
-              onChange={e => handleChange(e.target.value)}
-              placeholder={'evans - going to bremerhaven\nkryvoruchenko - going to niepolomice\ndima - going to base'}
-              spellCheck={false}
-            />
+      <div className="editor-wrap-full">
+        <div className="editor-label">{t.plans}</div>
+        <div className="editor-container">
+          <div className="line-numbers">
+            {lines.map((_, i) => <span key={i}>{i+1}</span>)}
           </div>
+          <textarea
+            className="update-textarea"
+            value={text}
+            onChange={e => handleChange(e.target.value)}
+            placeholder={'evans - going to bremerhaven\nkryvoruchenko - going to niepolomice\ndima - going to base'}
+            spellCheck={false}
+          />
         </div>
-        {text.trim() && (
-          <div className="preview-wrap">
-            <div className="editor-label">{t.preview || 'Preview'}</div>
-            <div className="preview-box">
-              {lines.filter(l => l.trim()).map((line, i) => {
-                const dashIdx = line.indexOf(' - ');
-                if (dashIdx > -1) {
-                  return (
-                    <div key={i} className="preview-line">
-                      <span className="prev-driver">{line.slice(0, dashIdx)}</span>
-                      <span className="prev-sep"> &#8594; </span>
-                      <span className="prev-plan">{line.slice(dashIdx+3)}</span>
-                    </div>
-                  );
-                }
-                return <div key={i} className="preview-line preview-plain">{line}</div>;
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

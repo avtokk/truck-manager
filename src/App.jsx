@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from './firebase';
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import HomePage from './pages/HomePage';
@@ -7,6 +7,7 @@ import UpdatePage from './pages/UpdatePage';
 import './App.css';
 
 const LANG_KEY = 'truckmanager_lang';
+const BASE_TITLE = 'TRUCK MGR';
 
 export const T = {
   ka: {
@@ -33,6 +34,7 @@ export const T = {
     openFile: 'გახსნა',
     addTruck: 'სატვირთოს დამატება',
     removeTruck: 'წაშლა',
+    preview: 'Preview',
   },
   en: {
     dashboard: 'DASHBOARD', permits: 'PERMITS', update: 'UPDATE', files: 'FILES',
@@ -58,6 +60,7 @@ export const T = {
     openFile: 'Open',
     addTruck: 'Add truck',
     removeTruck: 'Remove',
+    preview: 'Preview',
   }
 };
 
@@ -67,8 +70,35 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [lastChangeId, setLastChangeId] = useState(null);
   const [firebaseOk, setFirebaseOk] = useState(true);
+  const [hasAlert, setHasAlert] = useState(false);
+  const titleIntervalRef = useRef(null);
 
   const t = T[lang];
+
+  // Tab title blinking when change happens
+  const triggerTabAlert = useCallback(() => {
+    if (document.hidden === false) return; // only when tab not visible
+    setHasAlert(true);
+    let blink = true;
+    clearInterval(titleIntervalRef.current);
+    titleIntervalRef.current = setInterval(() => {
+      document.title = blink ? '(!) ' + BASE_TITLE : BASE_TITLE;
+      blink = !blink;
+    }, 1000);
+  }, []);
+
+  // Stop blinking when user returns to tab
+  useEffect(() => {
+    const handleVisible = () => {
+      if (!document.hidden) {
+        clearInterval(titleIntervalRef.current);
+        document.title = BASE_TITLE;
+        setHasAlert(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisible);
+    return () => document.removeEventListener('visibilitychange', handleVisible);
+  }, []);
 
   const toggleLang = () => {
     const next = lang === 'ka' ? 'en' : 'ka';
@@ -89,13 +119,13 @@ export default function App() {
         if (!snap.exists()) return;
         const data = snap.data();
         if (lastChangeId && data.id !== lastChangeId) {
-          addNotification('~ ' + (data.message || 'updated'));
+          triggerTabAlert();
         }
         setLastChangeId(data.id);
       }, () => { setFirebaseOk(false); });
     } catch (e) { setFirebaseOk(false); }
     return () => unsub && unsub();
-  }, [lastChangeId, addNotification]);
+  }, [lastChangeId, addNotification, triggerTabAlert]);
 
   const notifyChange = async (message) => {
     const id = Date.now().toString();
@@ -124,6 +154,7 @@ export default function App() {
         <div className="nav-brand">
           <span className="brand-icon">&#9651;</span>
           <span className="brand-text">TRUCK<span className="accent">MGR</span></span>
+          {hasAlert && <span className="tab-alert">!</span>}
         </div>
         <div className="nav-links">
           {navItems.map(item => (

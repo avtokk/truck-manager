@@ -25,3 +25,18 @@
   .nav-brand { margin-right: 4px; }
   .lang-btn { padding: 3px 7px; font-size: 11px; }
 }
+
+.tab-alert {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 11px;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 1s infinite;
+}
